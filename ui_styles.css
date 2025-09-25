@@ -1,0 +1,30 @@
+/* カスタムスタイル（参考用） */
+
+/* チャットメッセージのスタイル */
+.stChatMessage {
+    padding: 1rem;
+    margin: 0.5rem 0;
+    border-radius: 10px;
+}
+
+/* ユーザーメッセージ */
+.stChatMessage[data-testid="user-message"] {
+    background-color: #e3f2fd;
+    margin-left: 20%;
+}
+
+/* アシスタントメッセージ */
+.stChatMessage[data-testid="assistant-message"] {
+    background-color: #f5f5f5;
+    margin-right: 20%;
+}
+
+/* 入力欄のスタイル */
+.stChatInput {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background: white;
+    padding: 1rem;
+    border-top: 1px solid #e0e0e0;
+}
