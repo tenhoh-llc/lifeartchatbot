@@ -18,6 +18,7 @@ from core.logging import setup_logging, get_logger
 from pdf.ingest import ingest_directory
 from pdf.search_intelligent import search_intelligent as search_improved
 from pdf.search_intelligent import generate_intelligent_answer as generate_answer_from_hits
+from pdf.search_with_llm import search_with_llm, format_search_result
 from pdf.snippet import make_snippet
 from pdf.index import get_statistics
 
@@ -207,50 +208,36 @@ def render_search_interface():
                         if msg["role"] == "user":
                             search_context = msg["content"]
                             break
-                
-                # 改善された検索を実行
-                hits = search_improved(
+
+                # LLM統合検索を実行
+                result = search_with_llm(
                     query=query,
                     index_path=st.session_state.config.index_path,
-                    top_k=5
+                    top_k=5,
+                    context=search_context,
+                    use_llm=None  # 設定から自動判断
                 )
-                
-                # 回答を生成
-                result = generate_answer_from_hits(query, hits)
-                
-                if result["found"]:
-                    # 回答を表示
-                    source = result["source"]
-                    confidence_emoji = "🟢" if source["confidence"] == "high" else "🟡" if source["confidence"] == "medium" else "🔴"
-                    
-                    message_content = f"**回答:**\n{result['answer']}\n\n"
-                    message_content += f"{confidence_emoji} **信頼度:** {source['confidence']}\n\n"
-                    message_content += f"📚 **出典:** {source['file']} / ページ {source['page']}\n"
-                    
-                    if source['section']:
-                        message_content += f"📋 **セクション:** {source['section']}\n"
-                    
-                    # 他の候補も表示（スコアは表示しない）
-                    if len(result['all_results']) > 1:
-                        message_content += "\n**関連情報:**\n"
-                        for i, res in enumerate(result['all_results'][1:3], 2):  # 最大2件まで
-                            message_content += f"  ・ {res['file']} - ページ {res['page']}\n"
-                    
+
+                if result.search_hits:
+                    # 整形された回答を表示
+                    message_content = format_search_result(result)
+
                     st.session_state.chat_history.append({
                         "role": "assistant",
                         "content": message_content
                     })
                 else:
                     # 該当なしメッセージ
-                    suggestions = result.get("suggestions", [])
                     st.session_state.chat_history.append({
                         "role": "assistant",
-                        "content": f"""{result['answer']}
-                        
+                        "content": f"""{result.answer}
+
 💡 **検索のヒント:**
-{chr(10).join('- ' + s for s in suggestions)}"""
+- より具体的なキーワードをお試しください
+- 別の表現で検索してみてください
+- 部分的なキーワードで検索してみてください"""
                     })
-                    
+
             except Exception as e:
                 st.session_state.chat_history.append({
                     "role": "assistant",
