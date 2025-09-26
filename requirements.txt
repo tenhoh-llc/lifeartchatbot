@@ -5,6 +5,7 @@ pymupdf==1.24.10
 pdfminer.six==20240706
 rapidfuzz==3.9.6
 loguru==0.7.2
+openai==1.52.0
 black==24.8.0
 ruff==0.6.9
 pytest==8.3.2
